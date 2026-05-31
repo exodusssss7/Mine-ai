@@ -1,0 +1,114 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 600px;
+    height: 90vh;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.chat-header {
+    background-color: #333;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #444;
+}
+
+.chat-box {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.message.user {
+    background-color: #4a90e2;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
+}
+
+.message.assistant {
+    background-color: #444;
+    color: #e0e0e0;
+    align-self: flex-start;
+    border-bottom-left-radius: 5px;
+}
+
+.input-container {
+    display: flex;
+    padding: 15px;
+    background-color: #333;
+    border-top: 1px solid #444;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 12px;
+    background-color: #222;
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: white;
+    outline: none;
+}
+
+#user-input:focus {
+    border-color: #4a90e2;
+}
+
+#send-btn {
+    padding: 10px 20px;
+    margin-left: 10px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#send-btn:hover {
+    background-color: #357abd;
+}
+
+#send-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.loading {
+    align-self: flex-start;
+    color: #aaa;
+    font-style: italic;
+    font-size: 0.9em;
+}
