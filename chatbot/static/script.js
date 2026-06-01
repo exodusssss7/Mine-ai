@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
+    const internetToggle = document.getElementById('internet-toggle');
 
     fetchHistory();
 
@@ -33,6 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function showSearchAnimation(query) {
+        const searchDiv = document.createElement('div');
+        searchDiv.classList.add('search-indicator');
+        searchDiv.id = 'search-indicator';
+        searchDiv.innerHTML = `🌍 Searching the web for: <strong>"${query}"</strong>...`;
+        chatBox.appendChild(searchDiv);
+        scrollToBottom();
+    }
+
+    function removeSearchAnimation() {
+        const searchDiv = document.getElementById('search-indicator');
+        if (searchDiv) {
+            searchDiv.remove();
+        }
+    }
+
     async function fetchHistory() {
         try {
             const response = await fetch('/history');
@@ -59,13 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = userInput.value.trim();
         if (!text) return;
 
-        if (chatBox.children.length === 1 && chatBox.children[0].textContent.includes("awaken the AI")) {
-            chatBox.innerHTML = '';
+        if (chatBox.children.length > 0 && chatBox.children[0].textContent.includes("awaken the AI")) {
+            chatBox.children[0].remove();
         }
 
         userInput.value = '';
         userInput.disabled = true;
         sendBtn.disabled = true;
+        internetToggle.disabled = true;
 
         addMessageToUI('user', text);
         addLoadingIndicator();
@@ -73,27 +91,54 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: text })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: text,
+                    internet_enabled: internetToggle.checked
+                })
             });
 
             removeLoadingIndicator();
 
             if (response.ok) {
                 const data = await response.json();
-                addMessageToUI('assistant', data.reply);
+                
+                if (data.action === "search") {
+                    showSearchAnimation(data.query);
+                    
+                    const searchResponse = await fetch('/resolve_search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            query: data.query,
+                            tool_call_id: data.tool_call_id
+                        })
+                    });
+                    
+                    removeSearchAnimation();
+                    
+                    if (searchResponse.ok) {
+                        const finalData = await searchResponse.json();
+                        addMessageToUI('assistant', finalData.reply);
+                    } else {
+                        addMessageToUI('assistant', 'Error: Failed to process search results.');
+                    }
+                    
+                } else {
+                    addMessageToUI('assistant', data.reply);
+                }
             } else {
                 addMessageToUI('assistant', 'Error: Could not reach the AI.');
             }
         } catch (error) {
             removeLoadingIndicator();
+            removeSearchAnimation();
             addMessageToUI('assistant', 'Error: Network failure.');
             console.error('Error sending message:', error);
         } finally {
             userInput.disabled = false;
             sendBtn.disabled = false;
+            internetToggle.disabled = false;
             userInput.focus();
         }
     }
