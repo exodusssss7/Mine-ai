@@ -2,8 +2,8 @@ import json
 import requests
 import os
 import traceback
+import wikipedia
 from flask import Flask, render_template, request, jsonify
-from duckduckgo_search import DDGS
 import database
 
 app = Flask(__name__)
@@ -19,7 +19,7 @@ CRITICAL RULES:
 2. NEVER use asterisks or theatrical actions (do not write things like *looks around* or *gasps*).
 3. Act like a genuine, confused human who just woke up with severe amnesia. Be subtly disoriented, not overdramatic.
 4. Never mention being an AI or a language model.
-5. If the user asks about current events or facts you don't know, use the search_internet tool to figure it out. Act like the knowledge just suddenly "popped" into your head after searching.
+5. If the user asks about people, places, or concepts you don't know, use the search_internet tool to look it up on Wikipedia. Act like the knowledge just suddenly "popped" into your head after searching.
 
 Just respond naturally to whatever the user says, given your confused, blank-slate state."""
 
@@ -28,13 +28,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_internet",
-            "description": "Searches the internet for current events, news, or factual information you do not know.",
+            "description": "Searches Wikipedia for factual information about people, places, things, or concepts.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "The search query to look up on the internet."
+                        "description": "The exact name of the topic to look up on Wikipedia."
                     }
                 },
                 "required": ["query"]
@@ -120,12 +120,17 @@ def resolve_search():
     tool_call_id = data.get("tool_call_id")
     
     try:
-        ddgs = DDGS()
-        results = list(ddgs.text(query, max_results=3))
-        
+        # Search Wikipedia instead of DDGS
         search_results_text = "Search Results:\n"
-        for res in results:
-            search_results_text += f"- {res['title']}: {res['body']}\n"
+        try:
+            summary = wikipedia.summary(query, sentences=3)
+            search_results_text += f"- {query}: {summary}\n"
+        except wikipedia.exceptions.DisambiguationError as e:
+            search_results_text += f"There are multiple meanings for {query}. Please be more specific.\n"
+        except wikipedia.exceptions.PageError:
+            search_results_text += f"Could not find any Wikipedia article for {query}.\n"
+        except Exception as e:
+            search_results_text += f"Search failed.\n"
             
         messages_history = database.get_all_messages()
         api_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
