@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 
 def get_headers():
     key = os.environ.get("SUPABASE_KEY")
@@ -16,11 +17,15 @@ def get_url():
         url = url[:-1]
     return f"{url}/rest/v1/messages" if url else None
 
-def add_message(role, content):
+def add_message(role, content, username=None):
     url = get_url()
     if not url: return
     try:
-        requests.post(url, headers=get_headers(), json={"role": role, "content": content})
+        actual_content = content
+        if role == "user" and username:
+            actual_content = f"{username}: {content}"
+
+        requests.post(url, headers=get_headers(), json={"role": role, "content": actual_content})
     except Exception as e:
         print(f"Error saving to Supabase: {e}")
 
