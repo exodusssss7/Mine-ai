@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="nav-bar">
+        <h2>Student: {{ session['username'] }}</h2>
+        <a href="/logout" class="capsule-btn small">Logout</a>
+    </div>
+
+    <div class="container dashboard">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h3>Assignments</h3>
+            {% if assignments %}
+                <div class="submissions-list">
+                {% for a in assignments %}
+                    {% set sub = my_submissions.get(a.id) %}
+                    <div class="submission-item">
+                        <h4>{{ a.title }} <small>(by {{ a.teacher_name }})</small></h4>
+                        <p>{{ a.description }}</p>
+
+                        {% if sub %}
+                            <div class="submission-status">
+                                <p class="status {{ sub.status }}">Status: {{ sub.status }}</p>
+                                {% if sub.feedback %}
+                                    <p class="feedback"><strong>Feedback:</strong> {{ sub.feedback }}</p>
+                                {% endif %}
+                                <a href="/download/{{ sub.id }}" class="capsule-btn small" target="_blank">View My Submission</a>
+                            </div>
+                        {% endif %}
+
+                        <form method="POST" action="/submit_work/{{ a.id }}" enctype="multipart/form-data" class="upload-form">
+                            <input type="file" name="file" required>
+                            <button type="submit" class="capsule-btn small">
+                                {% if sub %}Resubmit{% else %}Submit Work{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p>No assignments available.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

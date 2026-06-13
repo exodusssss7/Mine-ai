@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="nav-bar">
+        <h2>Teacher: {{ session['username'] }}</h2>
+        <a href="/logout" class="capsule-btn small">Logout</a>
+    </div>
+
+    <div class="container dashboard">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h3>Create New Assignment</h3>
+            <form method="POST" action="/create_assignment" class="inline-form">
+                <input type="text" name="title" placeholder="Assignment Title" required>
+                <textarea name="description" placeholder="Description (optional)"></textarea>
+                <button type="submit" class="capsule-btn">Assign</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Student Submissions</h3>
+            {% if submissions %}
+                <div class="submissions-list">
+                {% for sub in submissions %}
+                    <div class="submission-item">
+                        <h4>{{ sub.student_name }} - {{ sub.title }}</h4>
+                        <p class="status {{ sub.status }}">Status: {{ sub.status }}</p>
+                        <a href="/download/{{ sub.id }}" class="capsule-btn small" target="_blank">Download Work</a>
+
+                        <form method="POST" action="/review/{{ sub.id }}" class="review-form">
+                            <select name="status">
+                                <option value="approved" {% if sub.status == 'approved' %}selected{% endif %}>Approve</option>
+                                <option value="rejected" {% if sub.status == 'rejected' %}selected{% endif %}>Reject</option>
+                                <option value="pending" {% if sub.status == 'pending' %}selected{% endif %}>Pending</option>
+                            </select>
+                            <input type="text" name="feedback" placeholder="Feedback..." value="{{ sub.feedback or '' }}">
+                            <button type="submit" class="capsule-btn small">Update</button>
+                        </form>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p>No submissions yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>My Assignments</h3>
+            <ul class="assignment-list">
+            {% for a in assignments %}
+                <li>
+                    <strong>{{ a.title }}</strong><br>
+                    <small>{{ a.description }}</small>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
